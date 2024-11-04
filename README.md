@@ -13,6 +13,7 @@ You need to download ALL files, or download executable in [Releases](https://git
 ## IF YOU ARE RUNNING WITH THE EXECUTABLE FILE:
   1. Make sure it is the latest release.
   2. The executable files are not stable, I strongly recommend you use the .pyw version instead of .exe verser. I am not going to answer any questions about the bugs appear in the executable file.
+  3. The executeable file will only be released if I finish a public version. There is no beta version of executable file.
 
 # IMPORTANT NOTES
   1. This program is designed for Windows OS, I am not going to support Linux, MacOS, iOS, Android or something else.
