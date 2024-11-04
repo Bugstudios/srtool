@@ -1,7 +1,7 @@
 # SRTOOL by zhx201933
 A toolkit for the anime game Honkai: Star Rail
 
-You need to download ALL files, or download executable in Release to make sure you have everything collected.
+You need to download ALL files, or download executable in [Releases](https://github.com/Bugstudios/srtool/releases) to make sure you have everything collected.
 
 ## IF YOU ARE RUNNING WITH THE .pyw FILE:
   1. Please make sure you have every assets collected.
