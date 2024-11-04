@@ -1,4 +1,5 @@
 # SRTOOL by zhx201933
+# ≈25% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
 A toolkit for the anime game Honkai: Star Rail
 
 You need to download ALL files, or download executable in [Releases](https://github.com/Bugstudios/srtool/releases) to make sure you have everything collected.
