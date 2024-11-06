@@ -21,7 +21,7 @@ You need to download ALL files, or download executable in [Releases](https://git
 
 # IMPORTANT NOTES
   1. This program is designed for Windows OS, I am not going to support Linux, MacOS, iOS, Android or something else.
-  2. This program is designed for Chinese speakers, I probably make english version some day, but until now, the language is written in the code, no a language file.
+  2. This program is designed for Chinese speakers, I probably make english version some day, but until now, the language is written in the code, not a language file.
   3. YOU NEED TO UPDATE THE SOFTWARE IF THE GAME RELEASE IT'S NEW VERSION!!
 
-# Nov 16 UPDATE very simple and unfinish UI and rate calculator
+# Nov 6 UPDATE very simple and unfinishd UI and rate calculator
