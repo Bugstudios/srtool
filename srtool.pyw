@@ -4,16 +4,16 @@ import json
 import logging
 import requests
 import pickle
-import subprocess  # 导入 subprocess 模块用于调用外部程序
+import subprocess
 from datetime import datetime
+import webbrowser  # 新增导入
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QScrollArea, QFrame, QInputDialog, 
                              QGridLayout, QGraphicsDropShadowEffect, QDesktopWidget, 
-                             QLineEdit, QTextEdit, QMessageBox, QFileDialog)
+                             QLineEdit, QTextEdit, QMessageBox)
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QFontDatabase, QColor, QBrush, QPalette
 from PyQt5.QtCore import Qt, QSize
-import webbrowser
-# 定义日志路径和配置信息
+
 SAVE_DIR = "./saves/players"
 CONFIG_DIR = "./config/software/"
 ELEMENT_COLOR_FILE = os.path.join(CONFIG_DIR, "elementcolor.json")
@@ -63,34 +63,28 @@ class CharacterDetailWindow(QWidget):
     def initUI(self):
         self.setWindowTitle(f"{self.character['name']} - Detailed Information")
         self.showMaximized()
-
-        # 设置窗口的背景图片
         self.set_background()
 
-        # 创建主布局
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # 创建一个QScrollArea
+
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
-        # 创建一个容器小部件，并将其放置在scroll area中
+
         container = QWidget()
         scroll_area.setWidget(container)
 
-        # 在容器小部件上设置布局
         layout = QVBoxLayout(container)
         layout.setContentsMargins(50, 50, 50, 50)
-        
+
         # 添加角色立绘
         splashart_path = f"image/splashart/{self.character['id']}.png"
         splashart_pixmap = QPixmap(splashart_path).scaled(768, 768, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         splashart_label = QLabel(self)
         splashart_label.setPixmap(splashart_pixmap)
-        
+
         # 添加命途符号
         path_name = self.character['path']['name'].lower()
         path_icon_key = self.paths_mapping.get(path_name, None)
@@ -103,19 +97,15 @@ class CharacterDetailWindow(QWidget):
             path_icon_label.move(10, 10)
 
         layout.addWidget(splashart_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-
-        # 将scroll_area加入主布局
         main_layout.addWidget(scroll_area)
 
     def set_background(self):
-        # 设置固定背景图片
         palette = self.palette()
         background_pixmap = QPixmap("image/gui/background.jpeg").scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
         palette.setBrush(QPalette.Window, QBrush(background_pixmap))
         self.setPalette(palette)
 
     def resizeEvent(self, event):
-        # 调整背景图片大小以覆盖整个窗口
         self.set_background()
         super().resizeEvent(event)
 
@@ -127,7 +117,7 @@ class HSRToolApp(QWidget):
         self.current_player = None  
         self.element_colors = load_element_colors()
         self.paths_mapping = load_paths_mapping()
-        self.detail_windows = []  # 存储角色详细信息窗口的列表
+        self.detail_windows = []
         self.initUI()
 
     def initUI(self):
@@ -196,6 +186,17 @@ class HSRToolApp(QWidget):
         bottom_layout.addWidget(self.cmd_button)
         bottom_layout.addWidget(self.gold_ticket_button)
         bottom_layout.addWidget(self.silver_ticket_button)
+
+        # 新增的按钮及其功能
+        self.stellar_jade_button = QPushButton()
+        stellar_jade_pixmap = QPixmap("image/gui/stellarjade.png").scaled(80, 80, Qt.KeepAspectRatio)
+        self.stellar_jade_button.setIcon(QIcon(stellar_jade_pixmap))
+        self.stellar_jade_button.setIconSize(stellar_jade_pixmap.size())
+        self.stellar_jade_button.setFixedSize(80, 80)
+
+        self.stellar_jade_button.clicked.connect(self.open_stellar_jade_website)
+
+        bottom_layout.addWidget(self.stellar_jade_button)
 
         self.left_layout.addStretch()
         self.left_layout.addLayout(bottom_layout)
@@ -397,15 +398,35 @@ class HSRToolApp(QWidget):
 
         with open(os.path.join(player_dir, "player_data.json"), 'w', encoding='utf-8') as f:
             json.dump(data, f)
-        logging.info(f"Data saved for UID {uid}")
+        logging.info(f"Player data saved for UID {uid}")
+
+        # 保存软件数据到软件文件
+        software_data = {
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        software_file_path = os.path.join(player_dir, "software.json")
+        with open(software_file_path, "w", encoding='utf-8') as f:
+            json.dump(software_data, f)
+        logging.info(f"Software data saved for UID {uid} with last updated time: {software_data['last_updated']}")
+
+    def load_software_data(self, uid):
+        software_file_path = os.path.join(SAVE_DIR, uid, "software.json")
+        if os.path.exists(software_file_path):
+            with open(software_file_path, 'r', encoding='utf-8') as f:
+                software_data = json.load(f)
+                return software_data.get('last_updated', '未更新')
+        return '未更新'
 
     def display_player_data(self, characters):
         self.clear_right_layout()
-        
+
         if self.current_player:
+            last_updated_time = self.load_software_data(self.current_player['uid'])  # 读取软件数据
             player_info = QLabel(f"<b style='font-size:48px;'>{self.current_player['nickname']}</b><br>"
                                  f"<b style='font-size:26px; font-weight:bold;'>UID:</b> "
-                                 f"<b style='font-size:35px; font-weight:bold;'>{self.current_player['uid']}</b><br><br>")
+                                 f"<b style='font-size:35px; font-weight:bold;'>{self.current_player['uid']}</b><br>"
+                                 f"<b style='font-size:26px; font-weight:bold;'>上次刷新时间:</b> "
+                                 f"<b style='font-size:26px; font-weight:bold;'>{last_updated_time}</b><br><br>")
             self.scroll_layout.addWidget(player_info)
 
         grid_layout = QGridLayout()
@@ -415,8 +436,9 @@ class HSRToolApp(QWidget):
         button_width = 280
         image_width = 280
         image_height = 384
-        available_width = self.right_frame.width() - (spacing * 2)
 
+        # 计算每行可以放置的按钮数量
+        available_width = self.scroll_area.width() - (spacing * 2)  # 取ScrollArea的可用宽度
         buttons_per_row = max(1, available_width // (button_width + spacing))
 
         for index, character in enumerate(characters):
@@ -429,12 +451,12 @@ class HSRToolApp(QWidget):
             element = character['element']['name']
             border_color = self.element_colors.get(element, '#000000')
             logging.debug(f"Element: {element}, Border Color: {border_color}")
-            
+
             shadow = QGraphicsDropShadowEffect(self)
             shadow.setBlurRadius(15)
             shadow.setColor(QColor(border_color))
             shadow.setOffset(0, 0)
-            
+
             char_button.setGraphicsEffect(shadow)
             char_button.setStyleSheet(f"""
                 QPushButton {{
@@ -456,9 +478,8 @@ class HSRToolApp(QWidget):
         self.scroll_layout.addLayout(grid_layout)
 
     def show_character_details(self, character):
-        # 每次显示角色详情时创建新的窗口实例
         detail_window = CharacterDetailWindow(character, self.element_colors, self.paths_mapping)
-        self.detail_windows.append(detail_window)  # 将新窗口实例添加到列表
+        self.detail_windows.append(detail_window)
         detail_window.show()
 
     def open_cmd(self):
@@ -469,12 +490,24 @@ class HSRToolApp(QWidget):
         self.gold_window = GoldTicketWindow()
         self.gold_window.show()
 
-
-
-
     def open_silver_ticket_simulator(self):
         self.silver_window = SilverTicketWindow()
         self.silver_window.show()
+
+    def open_stellar_jade_website(self):
+        reply = QMessageBox.question(self, "即将打开第三方抽卡模拟网站", 
+                                     "本网站和工具箱作者无关，是否确定要打开网站？",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            # 打开网站
+            webbrowser.open("https://hsr.wishsimulator.app")
+            logging.info("Opened Stellar Jade website")
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self.current_data:
+            self.display_player_data(self.current_data)  # 窗口调整时更新角色列表
+
 class GoldTicketWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -488,7 +521,7 @@ class GoldTicketWindow(QWidget):
         layout.addWidget(self.role_count_input)
 
         self.weapon_count_input = QLineEdit(self)
-        self.weapon_count_input.setPlaceholderText("你想要多少限定武器？")
+        self.weapon_count_input.setPlaceholderText("你想要多少限定光锥？")
         layout.addWidget(self.weapon_count_input)
 
         self.simulate_button = QPushButton("开始模拟", self)
@@ -505,14 +538,14 @@ class GoldTicketWindow(QWidget):
         role_count = self.role_count_input.text().strip()
         weapon_count = self.weapon_count_input.text().strip()
 
-        if (not all(x.isdigit() for x in [role_count, weapon_count])):
+        if not all(x.isdigit() for x in [role_count, weapon_count]):
             QMessageBox.critical(self, "输入无效", "请确保所有输入都是有效数字。")
             return
 
-        command = (f"expansions\\ratecalc.exe -average {role_count} {weapon_count}  ")
+        command = (f"expansions\\ratecalc.exe -average {role_count} {weapon_count} ")
 
         try:
-            output = "期望抽数 "+subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+            output = "期望抽数 " + subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
             self.result_display.setPlainText(output)
         except subprocess.CalledProcessError as e:
             QMessageBox.critical(self, "调用失败", f"错误信息:\n{e.output}")
@@ -520,29 +553,29 @@ class GoldTicketWindow(QWidget):
 class SilverTicketWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("银票抽卡模拟")
+        self.setWindowTitle("概率计算")
         self.setGeometry(100, 100, 400, 300)
 
         layout = QVBoxLayout()
 
         self.role_count_input = QLineEdit(self)
-        self.role_count_input.setPlaceholderText("输入角色数量")
+        self.role_count_input.setPlaceholderText("你要抽多少限定角色?")
         layout.addWidget(self.role_count_input)
 
         self.weapon_count_input = QLineEdit(self)
-        self.weapon_count_input.setPlaceholderText("输入武器数量")
+        self.weapon_count_input.setPlaceholderText("你要抽多少限定光锥?")
         layout.addWidget(self.weapon_count_input)
 
         self.items_input = QLineEdit(self)
-        self.items_input.setPlaceholderText("输入消耗的物品数量")
+        self.items_input.setPlaceholderText("你还有多少抽?(需要折合你的星琼数)")
         layout.addWidget(self.items_input)
 
         self.initial_role_pulls_input = QLineEdit(self)
-        self.initial_role_pulls_input.setPlaceholderText("输入初始角色抽卡次数")
+        self.initial_role_pulls_input.setPlaceholderText("角色池已垫抽数")
         layout.addWidget(self.initial_role_pulls_input)
 
         self.initial_weapon_pulls_input = QLineEdit(self)
-        self.initial_weapon_pulls_input.setPlaceholderText("输入初始武器抽卡次数")
+        self.initial_weapon_pulls_input.setPlaceholderText("光锥池已垫抽数")
         layout.addWidget(self.initial_weapon_pulls_input)
 
         self.major_pity_role_input = QLineEdit(self)
@@ -578,7 +611,7 @@ class SilverTicketWindow(QWidget):
             QMessageBox.critical(self, "输入无效", "请确保所有输入都是有效数字。")
             return
 
-        command = (f"expansions/ratecalc.exe -simulate {role_count} {weapon_count} {items} "
+        command = (f"expansions\\ratecalc.exe -simulate {role_count} {weapon_count} {items} "
                    f"{initial_role_pulls} {initial_weapon_pulls} {major_pity_role} {major_pity_weapon}")
 
         try:
