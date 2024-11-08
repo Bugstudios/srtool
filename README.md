@@ -2,7 +2,7 @@
 
 # IMPORTANT:IF SOMEONE HAS GOOD UI DESIGN OR RELIC ALGORITHM DESIGN OR CAN PROVIDE ME IMAGES IN THE GAME, PLEASE REQUEST A ISSUE TO NOTE ME, THANK YOU SO MUCH
 
-# ≈27% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
+# ≈28% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
 A toolkit for the anime game Honkai: Star Rail
 
 You need to download ALL files, or download executable in [Releases](https://github.com/Bugstudios/srtool/releases) to make sure you have everything collected.
@@ -24,4 +24,4 @@ You need to download ALL files, or download executable in [Releases](https://git
   2. This program is designed for Chinese speakers, I probably make english version some day, but until now, the language is written in the code, not a language file.
   3. YOU NEED TO UPDATE THE SOFTWARE IF THE GAME RELEASE IT'S NEW VERSION!!
 
-# Nov 6 UPDATE very simple and unfinishd UI and rate calculator
+# Nov 8 OPTIMIZED ratecalc.exe from 2.32MB to 9.00KB
