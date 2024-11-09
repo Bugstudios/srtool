@@ -1,135 +1,138 @@
+> 这是  README  的中文版。[ENGLISH](./README.en.md)。
 
->This is the English version of the README. [简中](./README.zh.md).
+**SRTOOL**：一款为游戏《崩坏：星穹铁道》设计的工具箱
 
-**SRTOOL**: A toolkit for the anime game Honkai: Star Rail
+您需要下载所有文件，或者在  [Releases](https://github.com/Bugstudios/srtool/releases)  中下载可执行文件，以确保已收集所有内容。
 
-You need to download ALL files, or download executable in [Releases](https://github.com/Bugstudios/srtool/releases) to make sure you have everything collected.
+## 使用 .pyw 运行：
 
-## Running with the .pyw file:
-  1. Please make sure you have every assets collected.
-  2. You need a python environment.
-  3. Make sure you run the
-     `pip install -r requirements.txt`
-     In order to install every dependencies for this python script.
-     
-## Running with the executable file:
-  1. Make sure it is the latest release.
-  2. The executable files are not stable, I strongly recommend you use the .pyw version instead of .exe version. I am not going to answer any questions about the bugs appear in the executable file.
-  3. The executeable file will only be released if I finish a public version. There is no beta version of executable file.
-  4. Executable files are only for Windows, as for other OS, install container to solve this.
+1.  确保您已收集所有资源。
+2.  需要Python 环境。
+3.  打开CMD, 运行：
+    `pip install -r requirements.txt`
+    安装此 Python 所需的所有依赖项。
 
-# Notes
-  1. This program is designed for Windows OS, some of the expansions or features cannot work in other OS, install container to solve this.
-  2. This program is designed for Chinese speakers, I probably make english version some day, but until now, the language is written in the code, not a language file.
-  3. Update this software if the game released its new version!
+## 使用.exe运行：
+
+1.  确保它是最新发布版本。
+2.  .exe文件不稳定，我强烈建议使用 .pyw 版本而非 .exe 版本。我不会回答任何关于其中出现的bug的问题。
+3.  正式版才会有.exe文件。不会有测试版软件的.exe文件。
+4.  .exe文件仅适用于 Windows，对于其他操作系统，请安装容器来解决这个问题。
+
+# 注意事项
+
+1.  本程序是为 Windows 操作系统设计的，某些扩展或功能在其他操作系统上无法运行，请安装容器来解决这个问题。
+2.  本程序是为中文用户设计的，我可能某天会制作英文版，但截至目前，语言是写在代码中的，而不是使用语言文件。
+3.  如果游戏发布了新版本，请更新此软件！
 
 
-## To-Do lists
-- [ ] Public Release v1.0
-	- [ ] Master Page Options
-	  - [x] Player List Options
-		  - [x] Add-a-Player Option
-		    - [x] Request Data from Mihomo API
-		    - [x] Save Data to Local Disk
-		  - [x] Player button
-			  - [x] Open 
-			  - [x] Refresh
-			  - [x] Delete
-	  - [ ] Expansions Options
-		  - [x] Command Line
-		  - [x] ratecalc.c & ratecalc.exe
-			  - [x] Rate Calculator
-			  - [x] Expectation Calculator
-		  - [x] Warp Simulator Redirector
-		  - [ ]   Illustrated Book
-			  - [ ] Light Cones
-		    	  - [ ] Data Details
-		    	  - [ ] Skills
-		    	  - [ ] Description
-		    	  - [ ] Material Info
-			  - [ ] Characters
-		    	  - [ ] Data Details
-		    	  - [ ] Skills
-		    	  - [ ] Material Info
-		    	  - [ ] Eidolons
-		    	  - [ ] Build Instructions
-		    	    - [ ] Team Suggestions
-		    	    - [ ] Light Cone Suggestions
-		    	    - [ ] Skill Suggestions
-		       	    - [ ] Relic Suggestions
-		    	    - [ ] Genre & Data & Axis Suggestions
-		    	  - [ ] Warp Rate&Expectations form
-		    	  - [ ] History Banner Record
-		    	    - [ ] Find Images
-		    	    - [ ] Make Banners.json to Config
-		    	  - [ ] Live Redeem Code
-		    	    - [ ] Fetch from server
-		    	    - [ ] Output Zone
-		    	    - [ ] Copy to clipboard
-	  - [ ] Character List Page
-	    - [x] Name
-	    - [x] UID
-	    - [x] Time
-	    - [x] Character Button
-	      - [x] Image
-	      - [x] Connect to Character Details Page
-	    - [ ] Custom Theme Editor
-	      - [ ] Custom Background Image Option
-	      - [ ] Custom Background Music Player Option
-	    - [ ] Damage Calculator & Progress Scorer (As an expansion)
-	       - [ ] Team Editor
-	       - [ ] Select 1-4 Characters
-	       - [ ] Save & Load Team
-	       - [ ] Damage Calculator
-	       - [ ] Progress Scorer
-	       - [ ] Show All Buff
-	          - [ ] Get Configs
-	       - [ ] GUI Window
-	- [ ] Character Details Page
-	  - [ ] Export As Image
-	  - [ ] Character Data
-	    - [ ] Character (A good UI design)
-	      - [x] Splash Art
-	      - [ ] Paths
-	      - [x] Element
-	      - [ ] Level
-	      - [ ] Rarity
-	      - [ ] Eidolon
-	      - [ ] Skill Tree
-	      - [ ] Data
-	        - [x] Find All Image
-	        - [ ] Basic Attributes
-	        - [ ] Extra & Final Attributes
-	    - [ ] Light Cone (A good UI design)
-	      - [ ] Rarity
-	      - [ ] Image
-	      - [ ] Paths
-	      - [ ] Level
-	      - [ ] Data
-			 - [x] Find All Image
-			 - [ ] Show Attributes
-	      - [ ] Skill & Description
-	        - [ ] All config .json
-	        - [ ] Scroll Zone
-	     - [ ] Relic (A good UI design)
-	       - [ ] Scorer
-	         - [x] Make an Algorithm Editor
-	         - [ ] Make Main Software Understand it
-	         - [ ] Scoring & Ranking & Progress
-	         - [ ] Suit Buff Information
-	         - [ ] Change Algorithm Genre
-	       - [ ] Show Relics
-	         - [ ] Get Relic Image
-	         - [ ] Get Relic Buff
-	         - [x] buffdata mapping json file
-	         - [ ] Rarity Image
-	         - [ ] Level
-	         - [ ] Name
-	         - [ ] Main Affix
-	         - [ ] Sub Affix Upgrade Data & Information
-	         - [ ] Score
-	         - [ ] Rankings
-	         - [ ] Sub Affix Number Calculation
-	      - [ ] Team & Character Damage Calculation Entrance
-	      - [ ] Team Progress Calculation Entrance
 
+# 待办事项清单
+
+- [ ] 公开发布 v1.0
+  - [ ] 主页面选项
+    - [x] 玩家列表选项
+      - [x] 添加玩家选项
+        - [x] 从 Mihomo API 请求数据
+        - [x] 保存数据到本地磁盘
+      - [x] 玩家按钮
+        - [x] 打开
+        - [x] 刷新
+        - [x] 删除
+    - [ ] 扩展选项
+      - [x] 命令行
+      - [x] ratecalc.c & ratecalc.exe
+        - [x] 概率计算
+        - [x] 期望计算器
+      - [x] 抽卡模拟网站
+      - [ ] 图鉴
+        - [ ] 光锥
+          - [ ] 数据详情
+          - [ ] 技能
+          - [ ] 描述
+          - [ ] 材料信息
+        - [ ] 角色
+          - [ ] 数据详情
+          - [ ] 技能
+          - [ ] 材料信息
+          - [ ] 命途
+          - [ ] 构建说明
+            - [ ] 队伍建议
+            - [ ] 光锥建议
+            - [ ] 技能建议
+            - [ ] 遗器建议
+            - [ ] 流派、数据与行动轴建议
+          - [ ] 跃迁概率及期望表
+          - [ ] 历史卡池记录
+            - [ ] 搜索卡池图片
+            - [ ] 制作 Banners.json 配置
+          - [ ] 实时兑换码
+            - [ ] 从服务器获取
+            - [ ] 输出区
+            - [ ] 复制到剪贴板
+    - [ ] 角色列表页面
+      - [x] 名称
+      - [x] UID
+      - [x] 时间
+      - [x] 角色按钮
+        - [x] 图像
+        - [x] 连接到角色详情页
+      - [ ] 自定义主题编辑器
+        - [ ] 自定义背景图片选项
+        - [ ] 自定义背景音乐播放器选项
+      - [ ] 伤害计算和进度评分（作为expansions）
+        - [ ] 队伍编辑器
+        - [ ] 选择 1-4 位角色
+        - [ ] 保存 & 加载队伍
+        - [ ] 伤害计算
+        - [ ] 进度评分
+        - [ ] 显示所有增益效果
+          - [ ] 编写配置
+        - [ ] 图形用户界面窗口
+  - [ ] 角色详情页
+    - [ ] 导出为图像
+    - [ ] 角色数据
+      - [ ] 角色（用户界面设计）
+        - [x] 插画
+        - [ ] 命途
+        - [x] 元素
+        - [ ] 等级
+        - [ ] 稀有度 以及图像背景颜色
+        - [ ] 命途
+        - [ ] 技能树
+        - [ ] 数据
+          - [x] 寻找所有图像
+          - [ ] 基础属性
+          - [ ] 额外 & 最终属性
+      - [ ] 光锥（用户界面设计）
+        - [ ] 稀有度
+        - [ ] 图像
+        - [ ] 命途
+        - [ ] 等级
+        - [ ] 数据
+          - [x] 寻找所有图像
+          - [ ] 显示属性
+        - [ ] 技能 & 描述
+          - [ ] 所有配置 .json
+          - [ ] 滚动区
+     - [ ] 遗器（用户界面设计）
+       - [ ] 评分器
+         - [x] 制作算法编辑器
+         - [ ] 使软件理解评分算法
+         - [ ] 评分 & 评级 & 进度
+         - [ ] 套装增益信息
+         - [ ] 更改算法流派
+       - [ ] 显示遗器
+         - [ ] 获取遗器图像
+         - [ ] 获取遗器增益
+         - [x] 增益数据映射 json 文件
+         - [ ] 稀有度(图像背景颜色)
+         - [ ] 等级
+         - [ ] 名称
+         - [ ] 主词条
+         - [ ] 副词条升级数据 & 信息
+         - [ ] 评分
+         - [ ] 排名
+         - [ ] 副词条数量计算
+      - [ ] 队伍与角色伤害计算入口
+      - [ ] 队伍练度计算入口
