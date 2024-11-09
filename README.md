@@ -1,11 +1,9 @@
 # SRTOOL by zhx201933
 
+# ≈35% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
+
 This is the English version of the README. For the Chinese version, click [here](./README.zh.md).
 
-# Project Title
-
-A brief description of your project...
-# ≈35% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
 A toolkit for the anime game Honkai: Star Rail
 
 You need to download ALL files, or download executable in [Releases](https://github.com/Bugstudios/srtool/releases) to make sure you have everything collected.
