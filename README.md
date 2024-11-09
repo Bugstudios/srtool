@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 > 这是  README  的中文版。[ENGLISH](./README.en.md)。
 
 **SRTOOL**：一款为游戏《崩坏：星穹铁道》设计的工具箱
