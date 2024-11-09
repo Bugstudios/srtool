@@ -1,76 +1,83 @@
 import sys
 import os
 import json
-import logging
 import requests
 import pickle
 import subprocess
 from datetime import datetime
-import webbrowser  # 新增导入
+import webbrowser
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QScrollArea, QFrame, QInputDialog, 
-                             QGridLayout, QGraphicsDropShadowEffect, QDesktopWidget, 
-                             QLineEdit, QTextEdit, QMessageBox)
-from PyQt5.QtGui import QFont, QIcon, QPixmap, QFontDatabase, QColor, QBrush, QPalette
-from PyQt5.QtCore import Qt, QSize
+                             QGridLayout, QGraphicsDropShadowEffect, QLineEdit, 
+                             QTextEdit, QMessageBox, QTextBrowser)
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QFontDatabase, QColor, QBrush, QPalette, QPainter, QFontMetrics
+from PyQt5.QtCore import Qt, QSize, QPoint, QRect, QTimer, QUrl
 
 SAVE_DIR = "./saves/players"
 CONFIG_DIR = "./config/software/"
 ELEMENT_COLOR_FILE = os.path.join(CONFIG_DIR, "elementcolor.json")
 PATHS_MAPPING_FILE = os.path.join(CONFIG_DIR, "pathsmapping.json")
 
-# 设置日志记录
-log_dir = "./logs/"
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-log_filename = f"srtool_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[
-                        logging.FileHandler(os.path.join(log_dir, log_filename), encoding='utf-8')
-                    ])
-
 # 加载元素颜色配置
 def load_element_colors():
     if not os.path.exists(ELEMENT_COLOR_FILE):
-        logging.error(f"Element color configuration file not found: {ELEMENT_COLOR_FILE}")
         return {}
     with open(ELEMENT_COLOR_FILE, 'r', encoding='utf-8') as f:
-        element_colors = json.load(f)
-    logging.debug(f"Loaded element colors: {element_colors}")
-    return element_colors
+        return json.load(f)
 
-# 加载命途映射配置
+# 加载路径映射配置
 def load_paths_mapping():
     if not os.path.exists(PATHS_MAPPING_FILE):
-        logging.error(f"Paths mapping configuration file not found: {PATHS_MAPPING_FILE}")
         return {}
     with open(PATHS_MAPPING_FILE, 'r', encoding='utf-8') as f:
-        paths_mapping = json.load(f)
-    logging.debug(f"Loaded paths mapping: {paths_mapping}")
-    return paths_mapping
+        return json.load(f)
 
-# 角色详细信息窗口类
 class CharacterDetailWindow(QWidget):
     def __init__(self, character, element_colors, paths_mapping):
         super().__init__()
         self.character = character
         self.element_colors = element_colors
         self.paths_mapping = paths_mapping
+        self.rarity_colors = self.load_rarity_colors()
+        self.affix_mapping = self.load_affix_mapping()
         self.initUI()
 
+    def load_affix_mapping(self):
+        file_path = os.path.join("config", "software", "affixmapping.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        return {}
+
+    def load_rarity_colors(self):
+        file_path = os.path.join("config", "software", "raritycoloring.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        return {}
+
+    def get_gradient_style(self, rarity):
+        colors = self.rarity_colors
+        if str(rarity) in colors:
+            start = colors[str(rarity)]['start']
+            end = colors[str(rarity)]['end']
+            return f"background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 {start}, stop:1 {end});"
+        return ""
+
     def initUI(self):
-        self.setWindowTitle(f"{self.character['name']} - Detailed Information")
+        self.setWindowTitle(f"{self.character['name']} - 详细信息")
         self.showMaximized()
         self.set_background()
 
         main_layout = QVBoxLayout(self)
+        self.setLayout(main_layout)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        main_layout.addWidget(scroll_area)
 
         container = QWidget()
         scroll_area.setWidget(container)
@@ -81,23 +88,210 @@ class CharacterDetailWindow(QWidget):
         # 添加角色立绘
         splashart_path = f"image/splashart/{self.character['id']}.png"
         splashart_pixmap = QPixmap(splashart_path).scaled(768, 768, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-
-        splashart_label = QLabel(self)
+        splashart_label = QLabel(container)
         splashart_label.setPixmap(splashart_pixmap)
+        layout.addWidget(splashart_label, alignment=Qt.AlignLeft | Qt.AlignTop)
 
-        # 添加命途符号
         path_name = self.character['path']['name'].lower()
         path_icon_key = self.paths_mapping.get(path_name, None)
         if path_icon_key:
             path_icon_path = f"image/path/{path_icon_key}.png"
             path_pixmap = QPixmap(path_icon_path).scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-
             path_icon_label = QLabel(splashart_label)
             path_icon_label.setPixmap(path_pixmap)
             path_icon_label.move(10, 10)
 
-        layout.addWidget(splashart_label, alignment=Qt.AlignLeft | Qt.AlignTop)
-        main_layout.addWidget(scroll_area)
+        # 整个光锥和信息的表格
+        light_cone_frame = LightConeFrame(self.character, self.affix_mapping, container)
+        light_cone_frame.setFixedSize(896, 576)
+        layout.addWidget(light_cone_frame, alignment=Qt.AlignTop)
+
+        light_cone_layout = QVBoxLayout(light_cone_frame)
+        light_cone_layout.setContentsMargins(0, 0, 0, 0)
+
+        # 上部信息部分
+        top_section = QWidget(light_cone_frame)
+        top_section.setFixedHeight(192)
+        top_layout = QHBoxLayout(top_section)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+
+        # 左侧光锥图片和渐变背景
+        light_cone = self.character.get('light_cone')
+        if light_cone:
+            rarity = light_cone['rarity']
+            cone_id = light_cone['id']
+            gradient_style = self.get_gradient_style(rarity)
+            cone_name = light_cone['name']
+            cone_level = light_cone['level']
+            cone_rank = light_cone['rank']
+        else:
+            rarity = 0
+            cone_id = 'unequip'
+            gradient_style = "background-color: #444444;"
+            cone_name = "未佩戴光锥"
+            cone_level = "N/A"
+            cone_rank = "N/A"
+
+        gradient_section = QWidget(top_section)
+        gradient_section.setFixedSize(192, 192)
+        gradient_section.setStyleSheet(gradient_style + "border-top-left-radius: 15px;")
+
+        # 在渐变背景中居中显示光锥图
+        gradient_layout = QVBoxLayout(gradient_section)
+        gradient_layout.setContentsMargins(0, 0, 0, 0)
+
+        lightcone_pixmap = QPixmap(f"image/lightcone/{cone_id}.png").scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        lightcone_label = QLabel()
+        lightcone_label.setPixmap(lightcone_pixmap)
+        lightcone_label.setAlignment(Qt.AlignCenter)
+
+        gradient_layout.addWidget(lightcone_label)
+        top_layout.addWidget(gradient_section)
+
+        # 右侧信息区域
+        right_section = QWidget(top_section)
+        right_layout = QVBoxLayout(right_section)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+
+        # 光锥名称
+        colors = self.rarity_colors.get(str(rarity), {})
+        end_color = colors.get("end", "#ffffff")
+
+        name_label = QLabel(cone_name, right_section)
+        name_label.setFixedHeight(72)
+        name_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        name_label.setStyleSheet(f"color: {end_color}; font-size: 36px; font-weight: bold; padding: 0px 2px;")
+        right_layout.addWidget(name_label)
+
+        # 第二行: 光锥命途图标、等级、叠影数量
+        second_row = QWidget(right_section)
+        second_row.setFixedHeight(64)
+        second_row_layout = QHBoxLayout(second_row)
+        second_row_layout.setContentsMargins(0, 0, 0, 0)
+
+        # 设置布局的对齐方式为左对齐
+        second_row_layout.setAlignment(Qt.AlignLeft)
+
+        path_icon_label = QLabel(second_row)
+        path_icon_label.setPixmap(QPixmap(path_icon_path).scaled(64, 64, Qt.KeepAspectRatio))
+        path_icon_label.setFixedSize(64, 64)
+        second_row_layout.addWidget(path_icon_label)
+
+        level_label = QLabel(f"等级 {cone_level}", second_row)
+        level_label.setFixedSize(128, 64)
+        level_label.setAlignment(Qt.AlignCenter)
+        level_label.setStyleSheet("color: white; font-size: 32px; font-weight: bold;")
+        second_row_layout.addWidget(level_label)
+
+        rank_roman = ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ"]
+        rank_label = QLabel(rank_roman[int(cone_rank) - 1] if cone_rank != "N/A" else "N/A", second_row)
+        rank_label.setFixedSize(64, 64)
+        rank_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        rank_label.setStyleSheet("color: white; font-size: 32px; font-weight: bold;")
+        second_row_layout.addWidget(rank_label)
+
+        right_layout.addWidget(second_row)
+
+        # 稀有度一行
+        font_id = QFontDatabase.addApplicationFont("fonts/hsr-icon.ttf")
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+
+        star_label = QLabel("b" * rarity, right_section)
+        star_label.setFixedHeight(66)
+        star_label.setAlignment(Qt.AlignLeft)
+
+        custom_font = QFont(font_family, 16)
+        star_label.setFont(custom_font)
+
+        star_label.setStyleSheet(
+            f"color: {end_color}; font-weight: bold; "
+            f"margin: 0px 0px 0px 0px;"
+        )
+        right_layout.addWidget(star_label)
+
+        top_layout.addWidget(right_section)
+        light_cone_layout.addWidget(top_section)
+
+        # 下方滚动区域
+        bottom_section = QScrollArea(light_cone_frame)
+        bottom_section.setMinimumHeight(384)
+        bottom_section.setWidgetResizable(True)
+        bottom_section.setStyleSheet("background-color: transparent; border: none;")
+        bottom_section.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        bottom_section.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        bottom_content = QWidget()
+        bottom_layout = QVBoxLayout(bottom_content)
+
+        if light_cone:
+            lightcone_data = self.load_lightcone_data(cone_id)
+            if lightcone_data:
+                description_browser = QTextBrowser(bottom_content)
+                description_browser.setStyleSheet("background-color: transparent; color: white; font-weight: bold;")
+                self.populate_lightcone_description(description_browser, lightcone_data)
+                bottom_layout.addWidget(description_browser)
+        else:
+            description_browser = QTextBrowser(bottom_content)
+            description_browser.setStyleSheet("color: white; font-weight: bold;")
+            description_browser.append("未佩戴光锥")
+            bottom_layout.addWidget(description_browser)
+
+        bottom_section.setWidget(bottom_content)
+        light_cone_layout.addWidget(bottom_section)
+
+    def load_lightcone_data(self, lightcone_id):
+        file_path = os.path.join("config", "lightcone", f"{lightcone_id}.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        return None
+
+    def populate_lightcone_description(self, text_browser, data):
+        rarity = self.character['light_cone']['rank']
+
+        skill_description = data.get("combined_skill_description", "").replace("\n", "<br>")
+        light_cone_description = data.get("light_cone_description", "").replace("\n", "<br>")
+
+        text_browser.clear()
+
+        # Skill name and rarity level line
+        skill_name = data.get("skill_name", "")
+        text_browser.append(f"{skill_name} - 等级 {rarity}")
+
+        # Skill description with highlighting
+        skill_text = ""
+        start_marker = '[['
+        end_marker = ']]'
+
+        start = skill_description.find(start_marker)
+        while start != -1:
+            end = skill_description.find(end_marker, start)
+            if end != -1:
+                actual_start = start + len(start_marker)
+                actual_end = end
+
+                skill_text += skill_description[:start]
+
+                # Highlight the number according to rarity
+                numbers_str = skill_description[actual_start:actual_end].split(',')
+                if 1 <= rarity <= len(numbers_str):
+                    number_to_highlight = numbers_str[rarity - 1].strip()
+                    skill_text += f"<span style='color:orange;'>{number_to_highlight}</span>"
+
+                skill_description = skill_description[end + len(end_marker):]
+                start = skill_description.find(start_marker)
+            else:
+                break
+
+        skill_text += skill_description
+        text_browser.append(skill_text)
+
+        # 添加空行
+        text_browser.append("<br>")
+
+        # Light cone description in gray
+        text_browser.append(f"<div style='color:grey;'>{light_cone_description}</div>")
 
     def set_background(self):
         palette = self.palette()
@@ -109,7 +303,109 @@ class CharacterDetailWindow(QWidget):
         self.set_background()
         super().resizeEvent(event)
 
-# 主应用程序类
+
+class LightConeFrame(QWidget):
+    def __init__(self, character, affix_mapping, parent=None, bg_color="#262634"):
+        super().__init__(parent)
+        self.bg_color = bg_color
+        self.character = character
+        self.affix_mapping = affix_mapping
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        rect = self.rect()
+
+        # 填充背景色
+        painter.fillRect(rect, QColor(self.bg_color))
+
+        # 绘制右侧分割线
+        pen = painter.pen()
+        pen.setWidth(2)
+        pen.setColor(QColor('#444444'))
+        painter.setPen(pen)
+
+        # 计算分割线的起始和终止点位置
+        x_position = rect.width() - 320
+        y_end = 192
+        painter.drawLine(x_position, 0, x_position, y_end)
+
+        # 绘制表格框线
+        pen.setWidth(5)
+        pen.setColor(QColor('#444444'))
+        painter.setPen(pen)
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 30, 30)
+
+        # 绘制水平分割线
+        horizontal_line_y_position = 192
+        painter.drawLine(0, horizontal_line_y_position, rect.width(), horizontal_line_y_position)
+
+        # 在这里添加检测光锥是否存在并绘制属性图标、名称及数值
+        light_cone = self.character.get('light_cone')
+        attributes = light_cone.get('attributes', []) if light_cone else []
+        for idx, attribute in enumerate(attributes):
+            attr_name = attribute['name']
+            attr_value = float(attribute['value'])
+            attr_display = f"{attr_value:.3f}"
+
+            icon_file = self.affix_mapping.get(attr_name, None)
+            if icon_file:
+                icon_path = f"image/buffdata/{icon_file}.png"
+                if os.path.exists(icon_path):
+                    icon_pixmap = QPixmap(icon_path).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    # 下调图标1px
+                    icon_y = (idx * 64) - 4 + 1
+
+                    # 绘制图标：与框线对齐
+                    painter.drawPixmap(x_position + 10, icon_y, icon_pixmap)
+
+                    # 设置淡灰色
+                    light_gray = QColor(169, 169, 169)
+                    painter.setPen(light_gray)
+
+                    # 绘制属性名称，向下移动1像素
+                    font = painter.font()
+                    font.setBold(True)
+                    font.setPointSize(10)
+                    painter.setFont(font)
+
+                    # 设置属性名称的位置（向下移动1像素）
+                    name_x = x_position + 80
+                    name_y = (idx * 64) + (64 + self.fontMetrics().height()) // 2 + 1
+                    attr_abbr = self.affix_mapping.get(attr_name, attr_name)
+                    painter.drawText(QRect(name_x, (idx * 64) + 1, 150, 64), Qt.AlignVCenter | Qt.AlignLeft, attr_abbr)
+
+                    # 计算数字的宽度并调整位置
+                    font.setBold(True)
+                    font.setPointSize(11)
+                    painter.setFont(font)
+                    int_width = self.fontMetrics().width(str(int(attr_value)))
+
+                    # 设置小数部分的颜色和字体
+                    darker_gray = QColor(105, 105, 105)
+                    decimal_font = QFont(font)
+                    decimal_font.setPointSize(8)
+
+                    decimal_width = QFontMetrics(decimal_font).width(f".{attr_display.split('.')[1]}")
+
+                    total_width = int_width + decimal_width
+                    text_x = rect.width() - total_width - 19
+
+                    # 将所有数字上移6像素
+                    int_y = icon_y + (64 + self.fontMetrics().height()) // 2 - 6
+
+                    # 绘制整数部分，右移一些
+                    offset = 2
+                    painter.drawText(QPoint(text_x + offset, int_y), str(int(attr_value)))
+
+                    # 绘制小数部分
+                    painter.setFont(decimal_font)
+                    painter.setPen(darker_gray)
+                    painter.drawText(QPoint(text_x + int_width + offset, int_y), f".{attr_display.split('.')[1]}")
+
+        super().paintEvent(event)
+
+
 class HSRToolApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -187,13 +483,11 @@ class HSRToolApp(QWidget):
         bottom_layout.addWidget(self.gold_ticket_button)
         bottom_layout.addWidget(self.silver_ticket_button)
 
-        # 新增的按钮及其功能
         self.stellar_jade_button = QPushButton()
         stellar_jade_pixmap = QPixmap("image/gui/stellarjade.png").scaled(80, 80, Qt.KeepAspectRatio)
         self.stellar_jade_button.setIcon(QIcon(stellar_jade_pixmap))
         self.stellar_jade_button.setIconSize(stellar_jade_pixmap.size())
         self.stellar_jade_button.setFixedSize(80, 80)
-
         self.stellar_jade_button.clicked.connect(self.open_stellar_jade_website)
 
         bottom_layout.addWidget(self.stellar_jade_button)
@@ -231,8 +525,6 @@ class HSRToolApp(QWidget):
             font_id = QFontDatabase.addApplicationFont(font_path)
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             QApplication.setFont(QFont(font_family))
-        else:
-            logging.warning("Font file not found, using default font.")
 
         self.load_player_list()
 
@@ -333,7 +625,6 @@ class HSRToolApp(QWidget):
                 self.current_player = json.load(f)['player']
             
             self.display_player_data(self.current_data)
-            logging.info(f"Loaded character data from .pkl files for UID {uid}")
 
     def refresh_player_data(self, uid):
         self.fetch_data(uid)
@@ -361,7 +652,6 @@ class HSRToolApp(QWidget):
             import shutil
             shutil.rmtree(player_dir)
             self.load_player_list()
-            logging.info(f"Deleted player data for UID {uid}")
 
     def prompt_for_uid(self):
         uid, ok = QInputDialog.getText(self, "输入 UID", "请输入玩家 UID：")
@@ -371,7 +661,6 @@ class HSRToolApp(QWidget):
     def fetch_data(self, uid):
         if len(uid) != 9 or not uid.isdigit() or uid.startswith('0'):
             QMessageBox.critical(self, "Invalid UID", "<b>UID必须是9位数字且不能以 '0' 开头。请重试。</b>")
-            logging.warning("Attempted to fetch data with invalid UID")
             return
 
         url = f"https://api.mihomo.me/sr_info_parsed/{uid}?lang=cn"
@@ -381,10 +670,8 @@ class HSRToolApp(QWidget):
             data = response.json()
             self.save_data(uid, data)
             self.load_player_list()
-            logging.info(f"Fetched data for UID {uid}")
-        except requests.RequestException as e:
+        except requests.RequestException:
             QMessageBox.critical(self, "Fetch Failed", "<b>无法获取数据，请检查UID或网络连接。</b>")
-            logging.error(f"Error fetching data: {e}")
 
     def save_data(self, uid, data):
         player_dir = os.path.join(SAVE_DIR, uid)
@@ -394,20 +681,16 @@ class HSRToolApp(QWidget):
             char_file_path = os.path.join(player_dir, f"{character['id']}.pkl")
             with open(char_file_path, 'wb') as f:
                 pickle.dump(character, f)
-            logging.info(f"Character data saved for {character['name']} (ID: {character['id']})")
 
         with open(os.path.join(player_dir, "player_data.json"), 'w', encoding='utf-8') as f:
             json.dump(data, f)
-        logging.info(f"Player data saved for UID {uid}")
 
-        # 保存软件数据到软件文件
         software_data = {
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         software_file_path = os.path.join(player_dir, "software.json")
         with open(software_file_path, "w", encoding='utf-8') as f:
             json.dump(software_data, f)
-        logging.info(f"Software data saved for UID {uid} with last updated time: {software_data['last_updated']}")
 
     def load_software_data(self, uid):
         software_file_path = os.path.join(SAVE_DIR, uid, "software.json")
@@ -421,7 +704,7 @@ class HSRToolApp(QWidget):
         self.clear_right_layout()
 
         if self.current_player:
-            last_updated_time = self.load_software_data(self.current_player['uid'])  # 读取软件数据
+            last_updated_time = self.load_software_data(self.current_player['uid'])
             player_info = QLabel(f"<b style='font-size:48px;'>{self.current_player['nickname']}</b><br>"
                                  f"<b style='font-size:26px; font-weight:bold;'>UID:</b> "
                                  f"<b style='font-size:35px; font-weight:bold;'>{self.current_player['uid']}</b><br>"
@@ -437,8 +720,7 @@ class HSRToolApp(QWidget):
         image_width = 280
         image_height = 384
 
-        # 计算每行可以放置的按钮数量
-        available_width = self.scroll_area.width() - (spacing * 2)  # 取ScrollArea的可用宽度
+        available_width = self.scroll_area.width() - (spacing * 2)
         buttons_per_row = max(1, available_width // (button_width + spacing))
 
         for index, character in enumerate(characters):
@@ -450,7 +732,6 @@ class HSRToolApp(QWidget):
 
             element = character['element']['name']
             border_color = self.element_colors.get(element, '#000000')
-            logging.debug(f"Element: {element}, Border Color: {border_color}")
 
             shadow = QGraphicsDropShadowEffect(self)
             shadow.setBlurRadius(15)
@@ -484,7 +765,6 @@ class HSRToolApp(QWidget):
 
     def open_cmd(self):
         os.system("start cmd")
-        logging.info("Opened CMD")
 
     def open_gold_ticket_simulator(self):
         self.gold_window = GoldTicketWindow()
@@ -499,14 +779,12 @@ class HSRToolApp(QWidget):
                                      "本网站和工具箱作者无关，是否确定要打开网站？",
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            # 打开网站
             webbrowser.open("https://hsr.wishsimulator.app")
-            logging.info("Opened Stellar Jade website")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.current_data:
-            self.display_player_data(self.current_data)  # 窗口调整时更新角色列表
+            self.display_player_data(self.current_data)
 
 class GoldTicketWindow(QWidget):
     def __init__(self):
