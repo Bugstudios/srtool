@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 >This is the English version of the README. [简中](./README.md).
 
 **SRTOOL**: A toolkit for the anime game Honkai: Star Rail
