@@ -1,7 +1,10 @@
 # SRTOOL by zhx201933
 
-# IMPORTANT:IF SOMEONE HAS GOOD UI DESIGN OR RELIC ALGORITHM DESIGN OR CAN PROVIDE ME IMAGES IN THE GAME, PLEASE REQUEST A ISSUE TO NOTE ME, THANK YOU SO MUCH
+This is the English version of the README. For the Chinese version, click [here](./README.zh.md).
 
+# Project Title
+
+A brief description of your project...
 # ≈35% PROCESS FOR FIRST PUBLIC RELEASE, MANY THINGS UNFINISHED
 A toolkit for the anime game Honkai: Star Rail
 
